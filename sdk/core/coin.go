@@ -5,49 +5,42 @@ import "strings"
 type CoinType = SDKEnumString
 
 const (
-	// polka
-	CoinMINI CoinType = "MINI"
+	CoinMINI CoinType = "MINI" // polka
 	CoinPCX  CoinType = "PCX"
 	CoinXBTC CoinType = "XBTC"
 	CoinKSX  CoinType = "KSX"
 
-	// ETH
-	CoinETH  CoinType = "ETH"
+	CoinETH  CoinType = "ETH" // ETH
 	CoinUSDT CoinType = "USDT"
 
-	// sBTC
-	CoinSBTC CoinType = "sBTC"
+	CoinSBTC CoinType = "sBTC" // sBTC
+	CoinBTC  CoinType = "BTC"  // BTC
 
-	// WKSX
-	CoinWKSX      CoinType = "WKSX"
+	CoinWKSX      CoinType = "WKSX" // WKSX
 	CoinWKSX_USB  CoinType = "WKSX_USB"
 	CoinWKSX_USDT CoinType = "WKSX_USDT"
 	CoinWKSX_BUSD CoinType = "WKSX_BUSD"
 	CoinWKSX_USDC CoinType = "WKSX_USDC"
 
-	// Binance
-	CoinBNB      CoinType = "BNB"
+	CoinBNB      CoinType = "BNB" // Binance
 	CoinBSC_USDT CoinType = "BSC_USDT"
 	CoinBSC_BUSD CoinType = "BSC_BUSD"
 	CoinBSC_USDC CoinType = "BSC_USDC"
 
-	// BTC
-	CoinBTC CoinType = "BTC"
-
-	// 用户自定义的币
-	CoinUserCustom CoinType = "CustomCoin"
+	CoinUserCustom CoinType = "CustomCoin" // 用户自定义的币
 )
 
-type Coin struct {
-	name   CoinType // 币种唯一标识符
-	symbol string   // 币种符号，可展示给用户看
+type baseCoin struct {
+	name    CoinType // 币种唯一标识符
+	symbol  string   // 币种符号，可展示给用户看
+	decimal int16    // 精度
 
 	contractAddress string // 合约地址
 }
 
 // 通过 CoinType 枚举，来创建币种对象
 // @return 如果币种不是内置的币，将返回空
-func NewCoinWithType(t CoinType) *Coin {
+func newCoinWithType(t CoinType) *baseCoin {
 	var name, symbol string
 
 	upperName := strings.ToUpper(t)
@@ -81,55 +74,47 @@ func NewCoinWithType(t CoinType) *Coin {
 		return nil
 	}
 
-	return &Coin{
+	return &baseCoin{
 		name:   name,
 		symbol: symbol,
 	}
 }
 
-// Tradable interface
-func (c *Coin) payCoin() *Coin {
+func (c *baseCoin) PayCoin() Coin {
 	return c
 }
 
-// Tradable interface
-func (c *Coin) feeCoin() *Coin {
-	return c
+func (c *baseCoin) FeeCoin() Coin {
+	return c.Chain().MainCoin()
 }
 
 // properties
 
 // 币种唯一标识符
-func (c *Coin) Name() CoinType {
+func (c *baseCoin) Name() CoinType {
 	return c.name
 }
 
 // 币种符号，可展示给用户看
-func (c *Coin) Symbol() string {
+func (c *baseCoin) Symbol() string {
 	return c.symbol
 }
 
+func (c *baseCoin) Decimal() int16 {
+	return c.decimal
+}
+
+func (c *baseCoin) Chain() Chain {
+	return nil
+}
+
 // 是否是链上的主币
-func (c *Coin) isMainCoin() bool {
-	switch c.name {
-	case CoinMINI,
-		CoinPCX,
-		CoinXBTC, // ??
-		CoinETH,
-		CoinUSDT,
-		CoinKSX,
-		CoinWKSX,
-		CoinBNB,
-		CoinBTC,
-		CoinSBTC:
-		return true
-	default:
-		return false
-	}
+func (c *baseCoin) IsMainCoin() bool {
+	return c.Chain().MainCoin().Name() == c.Name()
 }
 
 // 合约币的合约地址
-func (c *Coin) ContractAddress() string {
+func (c *baseCoin) ContractAddress() string {
 	if c.contractAddress != "" {
 		return c.contractAddress
 	}
@@ -156,6 +141,6 @@ func (c *Coin) ContractAddress() string {
 }
 
 // 修改合约地址，提供 setter 只是为了方便 debug
-func (c *Coin) SetContractAddress(address string) {
+func (c *baseCoin) SetContractAddress(address string) {
 	c.contractAddress = address
 }

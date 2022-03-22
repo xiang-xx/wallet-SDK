@@ -1,9 +1,11 @@
 package sdk
 
-type ChainFramework = SDKEnumString
+type FrameworkType = SDKEnumString
 
 const (
-	ChainFrameworkPolka    ChainFramework = "polka"
-	ChainFrameworkBitcoin  ChainFramework = "bitcoin"
-	ChainFrameworkEthereum ChainFramework = "ethereum"
+	FrameworkPolka    FrameworkType = "polka"
+	FrameworkBitcoin  FrameworkType = "bitcoin"
+	FrameworkEthereum FrameworkType = "ethereum"
+
+	FrameworkUnknown FrameworkType = "unknown"
 )
