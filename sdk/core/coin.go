@@ -34,13 +34,11 @@ type baseCoin struct {
 	name    CoinType // 币种唯一标识符
 	symbol  string   // 币种符号，可展示给用户看
 	decimal int16    // 精度
-
-	contractAddress string // 合约地址
 }
 
 // 通过 CoinType 枚举，来创建币种对象
 // @return 如果币种不是内置的币，将返回空
-func newCoinWithType(t CoinType) *baseCoin {
+func internalCoinWithType(t CoinType) Coin {
 	var name, symbol string
 
 	upperName := strings.ToUpper(t)
@@ -48,19 +46,32 @@ func newCoinWithType(t CoinType) *baseCoin {
 	case CoinMINI,
 		CoinPCX,
 		CoinXBTC,
-		CoinETH,
+		CoinKSX:
+		return &PolkaCoin{&baseCoin{
+			name:   upperName,
+			symbol: upperName,
+		}}
+
+	case CoinBTC:
+		return &BtcCoin{&baseCoin{
+			name:   upperName,
+			symbol: upperName,
+		}}
+	case "SBTC": // sBTC 首字母是小写的
+		return &BtcCoin{&baseCoin{
+			name:   CoinSBTC,
+			symbol: CoinSBTC,
+		}}
+
+	case CoinETH,
 		CoinUSDT,
-		CoinKSX,
 		CoinWKSX,
-		CoinBNB,
-		CoinBTC:
-		name = upperName
-		symbol = upperName
-
-	case "SBTC": // sBTC 首字母需要小写
-		name = CoinSBTC
-		symbol = CoinSBTC
-
+		CoinBNB:
+		contractAddress := contractOfInternalEthCoin(t)
+		return &EthCoin{&baseCoin{
+			name:   upperName,
+			symbol: upperName,
+		}, contractAddress}
 	case CoinWKSX_USB,
 		CoinWKSX_USDT,
 		CoinWKSX_BUSD,
@@ -70,14 +81,14 @@ func newCoinWithType(t CoinType) *baseCoin {
 		CoinBSC_USDC:
 		name = upperName
 		symbol = strings.Split(upperName, "_")[1]
-	default:
-		return nil
+		contractAddress := contractOfInternalEthCoin(t)
+		return &EthCoin{&baseCoin{
+			name:   name,
+			symbol: symbol,
+		}, contractAddress}
 	}
 
-	return &baseCoin{
-		name:   name,
-		symbol: symbol,
-	}
+	return nil
 }
 
 func (c *baseCoin) PayCoin() Coin {
@@ -113,34 +124,15 @@ func (c *baseCoin) IsMainCoin() bool {
 	return c.Chain().MainCoin().Name() == c.Name()
 }
 
-// 合约币的合约地址
-func (c *baseCoin) ContractAddress() string {
-	if c.contractAddress != "" {
-		return c.contractAddress
-	}
-	switch c.name {
-	// case CoinXBTC: // ??
-	case CoinUSDT:
-		c.contractAddress = "0xdac17f958d2ee523a2206206994597c13d831ec7"
-	case CoinWKSX_USB:
-		c.contractAddress = "0xE7e312dfC08e060cda1AF38C234AEAcc7A982143"
-	case CoinWKSX_USDT:
-		c.contractAddress = "0x4B53739D798EF0BEa5607c254336b40a93c75b52"
-	case CoinWKSX_BUSD:
-		c.contractAddress = "0x37088186089c7D6BcD556d9A15087DFaE3Ba0C32"
-	case CoinWKSX_USDC:
-		c.contractAddress = "0x935CC842f220CF3A7D10DA1c99F01B1A6894F7C5"
-	case CoinBSC_USDT:
-		c.contractAddress = "0x55d398326f99059fF775485246999027B3197955"
-	case CoinBSC_BUSD:
-		c.contractAddress = "0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56"
-	case CoinBSC_USDC:
-		c.contractAddress = "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"
-	}
-	return c.contractAddress
+func (c *baseCoin) AsEth() *EthCoin {
+	return nil
 }
-
-// 修改合约地址，提供 setter 只是为了方便 debug
-func (c *baseCoin) SetContractAddress(address string) {
-	c.contractAddress = address
+func (c *baseCoin) AsPolka() *PolkaCoin {
+	return nil
+}
+func (c *baseCoin) AsBtc() *BtcCoin {
+	return nil
+}
+func (c *baseCoin) QueryBalance() (string, error) {
+	return "", nil
 }

@@ -3,17 +3,19 @@ package sdk
 import (
 	"bytes"
 	"fmt"
+
+	"github.com/shopspring/decimal"
 )
 
 type Recipient struct {
 	Address string
-	Amount  string
+	Value   string
 }
 
-func NewRecipient(address string, amount string) *Recipient {
+func NewRecipient(address string, value string) *Recipient {
 	return &Recipient{
 		Address: address,
-		Amount:  amount,
+		Value:   value,
 	}
 }
 
@@ -28,14 +30,37 @@ func NewMultiRecipient() *MultiRecipient {
 	}
 }
 
+// MARK: -
+
+// 计算转账总额
+// @return 如果其中有不合法的值，会返回 0
+func (m *MultiRecipient) TotalValue() string {
+	total := decimal.NewFromInt(0)
+	for _, v := range m.recipients {
+		num, err := decimal.NewFromString(v.Value)
+		if err != nil {
+			return "0"
+		}
+		total = total.Add(num)
+	}
+	return total.String()
+}
+
+// MARK: - Array Operation
+
+// 获取转账对象的数量
+func (m *MultiRecipient) Count() int {
+	return len(m.recipients)
+}
+
 // 添加转账对象
 func (m *MultiRecipient) Add(recipient *Recipient) {
 	m.recipients = append(m.recipients, recipient)
 }
 
 // 添加转账对象
-func (m *MultiRecipient) AddAddress(address string, amount string) {
-	m.recipients = append(m.recipients, NewRecipient(address, amount))
+func (m *MultiRecipient) AddAddress(address string, value string) {
+	m.recipients = append(m.recipients, NewRecipient(address, value))
 }
 
 // 移除指定的转账对象
@@ -81,10 +106,10 @@ func (m *MultiRecipient) IndexOfAddress(address string) int {
 // 输出多地址信息，方便 debug
 func (m *MultiRecipient) DebugInfo() string {
 	var buffer bytes.Buffer
-	buffer.WriteString(fmt.Sprintf("Contains %d recipients : \n", len(m.recipients)))
+	buffer.WriteString(fmt.Sprintf("Contains %d recipients, total %s value : (\n", len(m.recipients), m.TotalValue()))
 	for _, v := range m.recipients {
-		buffer.WriteString(fmt.Sprintf("\tto: %s, amount: %s,\n", v.Address, v.Amount))
+		buffer.WriteString(fmt.Sprintf("\tto: %s, value: %s,\n", v.Address, v.Value))
 	}
-	buffer.WriteString(")")
+	buffer.WriteString(")\n")
 	return buffer.String()
 }

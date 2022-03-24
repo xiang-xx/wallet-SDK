@@ -38,9 +38,21 @@ type Chain interface {
 	CreateAccountWithMnemonic(mnemonic string) Wallet
 	// 使用 keystore 和密码创建钱包
 	CreateAccountWithKeystore(keystore string, password string) Wallet
+
+	AsEth() *EthChain
+	AsPolka() *PolkaChain
+	AsBtc() *BtcChain
+
+	// 公钥转地址
+	// @param pubkey 公钥，以 0x 开头
+	EncodePubkey(pubkey string) (string, error)
+	// 地址转公钥
+	// @param address 地址
+	// @return 公钥，以 0x 开头
+	DecodeAddress(address string) (string, error)
 }
 
-// 继承于 Asset, 可以当 Asset 对象来使用
+// 继承于 Asset
 type Coin interface {
 	Asset
 	// 币种的唯一标识符
@@ -52,4 +64,10 @@ type Coin interface {
 
 	// 是否是主币
 	IsMainCoin() bool
+
+	AsEth() *EthCoin
+	AsPolka() *PolkaCoin
+	AsBtc() *BtcCoin
+
+	QueryBalance() (string, error)
 }

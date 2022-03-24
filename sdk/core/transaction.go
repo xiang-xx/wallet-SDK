@@ -10,9 +10,15 @@ type Transaction struct {
 }
 
 func (t *Transaction) EstimateFee() (string, error) {
+	// TODO
 	return "0", nil
 }
 
 func (t *Transaction) SignRawTx(password string) (string, error) {
+	// TODO
 	return "", nil
+}
+
+func (t *Transaction) SendTransaction(tx string) {
+	// TODO
 }

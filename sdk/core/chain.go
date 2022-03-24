@@ -20,33 +20,51 @@ const (
 type baseChain struct {
 	name   ChainType
 	rpcUrl string
+
+	framework FrameworkType
 }
 
-func newChainWithType(t ChainType) *baseChain {
-	rpc := ""
+func internalChainWithType(t ChainType) Chain {
+	rpc := rpcOfInternalChain(t)
+	switch t {
+	case ChainMinix, ChainChainx, ChainSherpax:
+		return &PolkaChain{&baseChain{
+			name:      t,
+			rpcUrl:    rpc,
+			framework: FrameworkPolka,
+		}}
+	case ChainSignet, ChainBitcoin:
+		return &BtcChain{&baseChain{
+			name:      t,
+			rpcUrl:    rpc,
+			framework: FrameworkBitcoin,
+		}}
+	case ChainEthereum, ChainSherpax_eth, ChainBinance:
+		return &EthChain{&baseChain{
+			name:      t,
+			rpcUrl:    rpc,
+			framework: FrameworkEthereum,
+		}}
+	}
+	return nil
+}
+
+func rpcOfInternalChain(t ChainType) string {
 	switch t {
 	case ChainMinix:
 	case ChainChainx:
 	case ChainSherpax:
 	case ChainSignet:
 	case ChainBitcoin:
-		rpc = ""
-
+		return "https://..."
 	case ChainEthereum:
-		rpc = "https://mainnet.infura.io/v3/da3717f25f824cc1baa32d812386d93f"
+		return "https://mainnet.infura.io/v3/da3717f25f824cc1baa32d812386d93f"
 	case ChainSherpax_eth:
-		rpc = "https://mainnet.sherpax.io/rpc"
+		return "https://mainnet.sherpax.io/rpc"
 	case ChainBinance:
-		rpc = "https://bsc-dataseed.binance.org"
-
-	default:
-		return nil
+		return "https://bsc-dataseed.binance.org"
 	}
-
-	return &baseChain{
-		name:   t,
-		rpcUrl: rpc,
-	}
+	return ""
 }
 
 func (c *baseChain) Name() ChainType {
@@ -56,16 +74,7 @@ func (c *baseChain) RpcUrl() string {
 	return c.rpcUrl
 }
 func (c *baseChain) Framework() FrameworkType {
-	switch c.name {
-	case ChainMinix, ChainChainx, ChainSherpax:
-		return FrameworkPolka
-	case ChainEthereum, ChainSherpax_eth, ChainBinance:
-		return FrameworkEthereum
-	case ChainSignet, ChainBitcoin:
-		return FrameworkBitcoin
-	default:
-		return FrameworkUnknown
-	}
+	return c.framework
 }
 
 func (c *baseChain) MainCoin() Coin {
@@ -106,4 +115,27 @@ func (c *baseChain) CreateAccountWithKeystore(keystore string, password string) 
 	return &PersonalWallet{
 		chain: c,
 	}
+}
+
+func (c *baseChain) AsEth() *EthChain {
+	return nil
+}
+func (c *baseChain) AsPolka() *PolkaChain {
+	return nil
+}
+func (c *baseChain) AsBtc() *BtcChain {
+	return nil
+}
+
+// 公钥转地址
+// @param pubkey 公钥，以 0x 开头
+func (c *baseChain) EncodePubkey(pubkey string) (string, error) {
+	return "", nil
+}
+
+// 地址转公钥
+// @param address 地址
+// @return 公钥，以 0x 开头
+func (c *baseChain) DecodeAddress(address string) (string, error) {
+	return "", nil
 }
