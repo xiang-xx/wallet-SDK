@@ -5,6 +5,7 @@ import (
 
 	"github.com/btcsuite/btcd/btcec/v2"
 	"github.com/centrifuge/go-substrate-rpc-client/v4/types"
+	"github.com/chainx-org/dogecoin-go-api/pkg/dogecoin"
 	"github.com/cosmos/go-bip39"
 )
 
@@ -102,4 +103,9 @@ func (a *Account) DecodeAddressToPublicKey(address string) (string, error) {
 
 func (a *Account) IsValidAddress(address string) bool {
 	return IsValidAddress(address, a.Chainnet)
+}
+
+func RunPrivatekey() (string, error) {
+	secret0 := "awesome beef hill broccoli strike poem rebel unique turn circle cool system"
+	return dogecoin.GenerateMyPrivkey(secret0)
 }
